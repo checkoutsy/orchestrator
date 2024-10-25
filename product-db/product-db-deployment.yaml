@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: product-db
+  template:
+    metadata:
+      name: product-db
+      labels:
+        app: product-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:latest
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: product-db
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: product-db-secret
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - name: init-script
+              mountPath: /docker-entrypoint-initdb.d/
+      volumes:
+        - name: init-script
+          configMap:
+            name: product-db-init
+      restartPolicy: Always
+      

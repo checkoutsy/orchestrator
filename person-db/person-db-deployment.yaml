@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: person-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: person-db
+  template:
+    metadata:
+      name: person-db
+      labels:
+        app: person-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:latest
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: person-db
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: person-db-secret
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - name: init-script
+              mountPath: /docker-entrypoint-initdb.d/
+      volumes:
+        - name: init-script
+          configMap:
+            name: person-db-init
+      restartPolicy: Always
+      
